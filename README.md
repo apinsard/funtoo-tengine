@@ -1,8 +1,10 @@
 funtoo-tengine
 ===============
- 
-The `funtoo-tengine` overlay is designed to be used with `Funtoo Linux`, however, ebuilds from this overlay can be used on any modern Gentoo Linux based derivative.
+
+The`funtoo-tengine` overlay is used by Funtoo Linux, and contains the nginx
+and tengine ebuilds. Funtoo makes some modifications to the initscript (to
+auto-scale to the number of cores) and the default configs.)
 
 You can report bugs at:
  
-* https://github.com/damex/funtoo-tengine/issues
+* https://bugs.funtoo.org
