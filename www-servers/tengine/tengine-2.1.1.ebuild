@@ -160,7 +160,9 @@ RDEPEND="http-cache? ( dev-libs/openssl )
 			$(ruby_implementation_depend ruby21)
 			$(ruby_implementation_depend ruby22) )
 		dev-ruby/rake
-		!!www-apache/passenger )"
+		!!www-apache/passenger
+		dev-libs/libev
+		dev-libs/libuv )"
 
 DEPEND="${RDEPEND}
 	arm? ( dev-libs/libatomic_ops )
@@ -288,9 +290,21 @@ src_prepare() {
 			-e "/passenger-install-nginx-module/d" \
 			-i "lib/phusion_passenger/packaging.rb" || die
 
+		sed -r \
+			-e 's#(LIBEV_CFLAGS =).*#\1 "-I/usr/include"#' \
+			-e 's#(LIBUV_CFLAGS =).*#\1 "-I/usr/include"#' \
+			-i build/common_library.rb
+
+		# Unbundle libev from passenger
+		sed -e '/ev_loop_get_pipe/d' \
+			-e '/ev_backend_fd/d' \
+			-i ext/common/SafeLibev.h ext/common/BackgroundEventLoop.cpp || die
+
 		rm "bin/passenger-install-apache2-module" \
 			"bin/passenger-install-nginx-module" || \
 			die "Unable to remove nginx and apache2 installation scripts."
+
+		rm -r ext/libev ext/libuv
 
 		cd "${mod_wd[passenger]}"
 		_ruby_each_implementation passenger_premake
@@ -468,6 +482,7 @@ passenger_premake() {
 	sed -e "s;#{PlatformInfo.ruby_command};${RUBY};g" \
 		-i "build/ruby_extension.rb" \
 		-i "lib/phusion_passenger/native_support.rb" || die
+	export USE_VENDORED_LIBEV=no USE_VENDORED_LIBUV=no
 	append-cflags $(test-flags-CC -fno-strict-aliasing -Wno-unused-result)
 	append-cxxflags $(test-flags-CXX -fno-strict-aliasing -Wno-unused-result -fPIC)
 	rake -m nginx || die "Passenger premake for ${RUBY} failed!"
